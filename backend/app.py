@@ -5,16 +5,9 @@ app = Flask(__name__)
 
 def calculate_fear_index(ticker):
     try:
-        stock = yf.Ticker(ticker, validate=False)  # validate 옵션 비활성화
+        stock = yf.Ticker(ticker)
         hist = stock.history(period="6mo")
-
-        if hist.empty:
-            return {"error": "주가 데이터를 가져오지 못했습니다. 유효한 티커인지 확인하세요."}
-
-        try:
-            info = stock.info
-        except Exception as e:
-            return {"error": f"기업 정보 불러오기 실패: {str(e)}"}
+        info = stock.info
 
         current_price = info.get("currentPrice") or hist["Close"][-1]
         ma60 = hist["Close"].rolling(60).mean().iloc[-1]
@@ -57,7 +50,7 @@ def calculate_fear_index(ticker):
         }
 
     except Exception as e:
-        return {"error": f"예상치 못한 오류: {str(e)}"}
+        return {"error": str(e)}
 
 @app.route('/api/fear-index', methods=['GET'])
 def fear_index():
@@ -72,4 +65,3 @@ def fear_index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
-
