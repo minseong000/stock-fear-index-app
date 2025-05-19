@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import yfinance as yf
 import os
 
 app = Flask(__name__)
+CORS(app)  # 🔓 프론트엔드 요청 허용
 
 def calculate_fear_index(ticker):
     try:
@@ -64,7 +66,6 @@ def fear_index():
         return jsonify(data), 500
     return jsonify(data)
 
-# ✅ Render에서 필요한 동적 포트 바인딩
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5000))  # 🔧 Render용 포트 처리
     app.run(host='0.0.0.0', port=port)
