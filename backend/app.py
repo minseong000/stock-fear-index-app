@@ -11,18 +11,19 @@ def calculate_fear_index(ticker):
         if hist.empty:
             return {"error": f"{ticker.upper()}의 주가 데이터를 가져올 수 없습니다. 유효한 티커인지 확인하세요."}
 
-        try:
-            info = stock.info
-        except Exception as e:
-            return {"error": f"기업 정보 조회 실패: {str(e)}"}
-
-        current_price = info.get("currentPrice") or hist["Close"][-1]
+        # 현재가와 평균 계산
+        current_price = hist["Close"].iloc[-1]
         ma60 = hist["Close"].rolling(60).mean().iloc[-1]
-        low_52 = info.get("fiftyTwoWeekLow", current_price * 0.7)
-        short_ratio = info.get("shortRatio", 0)
-        volume_avg = info.get("averageVolume", 1)
+
+        # 빠른 정보로 대체
+        fast_info = stock.fast_info
+        low_52 = fast_info.get("year_low", current_price * 0.7)
         volume_today = hist["Volume"].iloc[-1]
-        iv = info.get("impliedVolatility", 0.3) * 100
+        volume_avg = fast_info.get("average_volume", 1)
+
+        # 예측 불가능한 값은 기본값 사용
+        short_ratio = 0
+        iv = 30  # 기본 내재변동성
 
         score_momentum = max(0, min(100, 50 + (current_price - ma60) / ma60 * 100))
         score_low52 = max(0, min(100, 100 - ((current_price - low_52) / current_price * 100)))
@@ -44,7 +45,7 @@ def calculate_fear_index(ticker):
 
         return {
             "ticker": ticker.upper(),
-            "name": info.get("shortName", "Unknown"),
+            "name": ticker.upper(),
             "score": avg_score,
             "status": status,
             "details": [
